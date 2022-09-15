@@ -58,9 +58,9 @@ class CaptureEventProcedure
     {
         /* @var $order Order */
         $order = $eventTriggered->getOrder(); 
-        
+        $transactionDetails = [];
         // Get necessary information for the capture process
-        $transactionDetails = $this->paymentHelper->getDetailsFromPaymentProperty($order->id);
+        //$transactionDetails = $this->paymentHelper->getDetailsFromPaymentProperty($order->id);
         
         // Call the Capture process for the On-Hold payments
         if($transactionDetails['tx_status'] == 'ON_HOLD') {
