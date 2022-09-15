@@ -25,6 +25,7 @@ use Plenty\Modules\Payment\Events\Checkout\ExecutePayment;
 use Plenty\Modules\Payment\Events\Checkout\GetPaymentMethodContent;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodContainer;
 use Novalnet\Helper\PaymentHelper;
+use Novalnet\Services\PaymentService;
 use Novalnet\Methods\NovalnetPaymentAbstract;
 use Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract;
 use Novalnet\Constants\NovalnetConstants;
@@ -63,6 +64,7 @@ class NovalnetServiceProvider extends ServiceProvider
                         BasketRepositoryContract $basketRepository,
                         PaymentMethodContainer $payContainer,
                         PaymentHelper $paymentHelper,
+                        PaymentService $paymentService,
                         FrontendSessionStorageFactoryContract $sessionStorage,
                         Twig $twig
                         )
