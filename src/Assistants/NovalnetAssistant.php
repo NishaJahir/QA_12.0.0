@@ -444,8 +444,8 @@ class NovalnetAssistant extends WizardProvider
             'novalnetCashpaymentDuedate' => [
                'type' => 'text',
                'options' => [
-                   'name' => 'NovalnetAssistant.novalnetCashpaymentDuedateLabel',
-                   'tooltip' => 'NovalnetAssistant.novalnetCashpaymentDuedateTooltip'
+                   'name' => 'NovalnetAssistant.novalnetCashpaymentDueDateLabel',
+                   'tooltip' => 'NovalnetAssistant.novalnetCashpaymentDueDateTooltip'
                ]
             ]
         ];
