@@ -119,7 +119,7 @@ class PaymentHelper
                                 CountryRepositoryContract $countryRepository,
                                 PaymentRepositoryContract $paymentRepository,
                                 OrderRepositoryContract $orderRepository,
-                                PaymentOrderRelationRepositoryContract $paymentOrderRelationRepository,
+                                PaymentOrderRelationRepositoryContract $paymentOrderRelationRepository
                               
                                 
                                )
