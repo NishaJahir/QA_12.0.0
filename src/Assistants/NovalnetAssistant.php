@@ -311,7 +311,7 @@ class NovalnetAssistant extends WizardProvider
         $sepaPayments = ['novalnetSepa', 'novalnetGuaranteedSepa'];
         foreach($sepaPayments as $sepaPayment) {
             $config['steps'][$sepaPayment]['sections'][]['form'] = [
-                $sepaPayments. 'Duedate' => [
+                $sepaPayment. 'Duedate' => [
                    'type' => 'text',
                    'options' => [
                        'name' => 'NovalnetAssistant.novalnetSepaDueDateLabel',
