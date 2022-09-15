@@ -28,6 +28,7 @@ use Novalnet\Services\TransactionService;
 use Plenty\Modules\Plugin\DataBase\Contracts\DataBase;
 use Plenty\Modules\Plugin\DataBase\Contracts\Query;
 use Novalnet\Models\TransactionLog;
+use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
 use Plenty\Plugin\Log\Loggable;
 
 /**
@@ -75,6 +76,11 @@ class PaymentService
     private $transactionService;
     
     /**
+     * @var PaymentRepositoryContract
+     */
+    private $paymentRepository;
+    
+    /**
      * @var redirectPayment
      */
     private $redirectPayment = ['NOVALNET_APPLEPAY', 'NOVALNET_IDEAL', 'NOVALNET_SOFORT', 'NOVALNET_GIROPAY', 'NOVALNET_PRZELEWY24', 'NOVALNET_EPS', 'NOVALNET_PAYPAL', 'POSTFINANCE_CARD', 'POSTFINANCE_EFINANCE', 'NOVALNET_BANCONTACT', 'NOVALNET_ONLINE_BANK_TRANSFER', 'NOVALNET_ALIPAY', 'NOVALNET_WECHAT_PAY', 'NOVALNET_TRUSTLY'];
@@ -89,6 +95,7 @@ class PaymentService
      * @param CountryRepositoryContract $countryRepository
      * @param FrontendSessionStorageFactoryContract $sessionStorage
      * @param TransactionService $transactionService
+     * @param PaymentRepositoryContract $paymentRepository,
      */
     public function __construct(SettingsService $settingsService,
                                 PaymentHelper $paymentHelper,
@@ -96,7 +103,8 @@ class PaymentService
                                 AddressRepositoryContract $addressRepository,
                                 CountryRepositoryContract $countryRepository,
                                 FrontendSessionStorageFactoryContract $sessionStorage,
-                                TransactionService $transactionService
+                                TransactionService $transactionService,
+                                PaymentRepositoryContract $paymentRepository
                                )
     {
         $this->settingsService = $settingsService;
@@ -106,6 +114,7 @@ class PaymentService
         $this->countryRepository  = $countryRepository;
         $this->sessionStorage  = $sessionStorage;
         $this->transactionService = $transactionService;
+        $this->paymentRepository = $paymentRepository;
     }
     
     /**
@@ -1056,5 +1065,82 @@ class PaymentService
         } catch(\Exception $e) {
             $this->getLogger(__METHOD__)->error('Novalnet::doCaptureVoid failed ' . $paymentRequestData['order_no'], $e);
         }
+    }
+    
+    /**
+    * Get required details from payment object and Novalnet database
+    *
+    * @param int $orderId
+    *
+    * @return array
+    */
+    public function getDetailsFromPaymentProperty($orderId)
+    {
+        // Get the payment details
+        $paymentDetails = $this->paymentRepository->getPaymentsByOrderId($orderId);
+        
+        // Fetch the necessary data
+        foreach($paymentDetails as $paymentDetail)
+        {
+            $paymentProperties = $paymentDetail->properties;
+            foreach($paymentProperties as $paymentProperty)
+            {
+                  if ($paymentProperty->typeId == 1) {
+                    $tid = $paymentProperty->value;
+                  }
+                  if ($paymentProperty->typeId == 30) {
+                    $txStatus = $paymentProperty->value;
+                  }
+                  if ($paymentProperty->typeId == 21) {
+                     $invoiceDetails = $paymentProperty->value;
+                  }
+            }
+        }
+        
+        // Get Novalnet transaction details from the Novalnet database table
+        $nnDbTxDetails = $this->getDatabaseValues($orderId);
+        
+        // Merge the array if bank details are there
+        if(!empty($invoiceDetails)) {
+            $nnDbTxDetails = array_merge($nnDbTxDetails, json_decode($invoiceDetails, true));
+        }
+        
+        // Get the transaction status as string for the previous payment plugin version
+        $nnDbTxDetails['tx_status'] = $this->getTxStatusAsString($txStatus, $nnDbTxDetails['payment_id']);
+        
+        return $nnDbTxDetails;
+    }
+    
+    /**
+     * Get refund status
+     * 
+     * @param int $orderId
+     * @param int $orderAmount
+     * 
+     * @return string
+     */
+    public function getRefundStatus($orderId, $orderAmount)
+    {
+        // Get the transaction details for an order
+        $transactionDetails = $this->transactionService->getTransactionData('orderNo', $orderId);
+        
+        $totalCallbackDebitAmount = 0;
+
+        foreach($transactionDetails as $transactionDetail) {
+            if($transactionDetail->referenceTid != $transactionDetail->tid) {
+                if(!empty($transactionDetail->additionalInfo)) {
+                    $additionalInfo = json_decode($transactionDetail->additionalInfo, true);
+                    if($additionalInfo['type'] == 'debit') {
+                        $totalCallbackDebitAmount += $transactionDetail->callbackAmount;  
+                    }
+                } else {
+                    $totalCallbackDebitAmount += $transactionDetail->callbackAmount;
+                }
+            }
+        }
+        
+        $refundStatus = ($orderAmount > $totalCallbackDebitAmount) ? 'Partial' : 'Full';
+        
+        return $refundStatus;
     }
 }
