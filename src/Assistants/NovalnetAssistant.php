@@ -354,12 +354,6 @@ class NovalnetAssistant extends WizardProvider
                                 'checkboxValues' => $this->getAllowedCreditCardTypes()
                             ]
                        ],
-            'novalnetCcOneClickShoppping' => [
-                           'type' => 'checkbox',
-                           'options' => [
-                               'name' => 'NovalnetAssistant.novalnetOneClickShopppingLabel'
-                           ]
-                       ],
             'novalnetCcStandardStyleLabel' => [
                            'type' => 'text',
                            'options' => [
@@ -496,7 +490,7 @@ class NovalnetAssistant extends WizardProvider
     * 
     * @param array $config
     * 
-    * @return none
+    * @return array
     */
     public function getAllowedCreditCardTypes()
     {
@@ -508,6 +502,7 @@ class NovalnetAssistant extends WizardProvider
                 'value' => $cardType
                 ];
         }
+        return $allowedCreditCardTypes;
     }
     
     /**
