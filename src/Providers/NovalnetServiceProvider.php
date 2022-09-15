@@ -59,7 +59,6 @@ class NovalnetServiceProvider extends ServiceProvider
      * @param PaymentService $paymentService
      * @param FrontendSessionStorageFactoryContract $sessionStorage
      * @param Twig $twig
-     * @param EventProceduresService $eventProceduresService
      */
     public function boot(Dispatcher $eventDispatcher,
                         BasketRepositoryContract $basketRepository,
@@ -67,8 +66,7 @@ class NovalnetServiceProvider extends ServiceProvider
                         PaymentHelper $paymentHelper, 
                         PaymentService $paymentService,
                         FrontendSessionStorageFactoryContract $sessionStorage,
-                        Twig $twig,
-                        EventProceduresService $eventProceduresService
+                        Twig $twig
                         )
     {
         $this->registerPaymentMethods($payContainer);
