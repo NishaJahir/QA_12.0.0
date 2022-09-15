@@ -21,7 +21,7 @@ class SettingsService
    /**
    * @var DataBase
    */
-   private $database;
+   protected $database;
 
    /**
    * SettingsService constructor.
