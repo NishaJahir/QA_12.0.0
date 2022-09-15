@@ -26,14 +26,10 @@ use Plenty\Modules\Payment\Events\Checkout\GetPaymentMethodContent;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodContainer;
 use Novalnet\Helper\PaymentHelper;
 use Novalnet\Services\PaymentService;
-use Plenty\Modules\Wizard\Contracts\WizardContainerContract;
-
 use Novalnet\Methods\NovalnetPaymentAbstract;
 use Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract;
 use Novalnet\Constants\NovalnetConstants;
 use Plenty\Plugin\Templates\Twig;
-use Plenty\Modules\EventProcedures\Services\Entries\ProcedureEntry;
-use Plenty\Modules\EventProcedures\Services\EventProceduresService;
 use Plenty\Plugin\Log\Loggable;
 
 /**
@@ -71,8 +67,7 @@ class NovalnetServiceProvider extends ServiceProvider
                         PaymentHelper $paymentHelper, 
                         PaymentService $paymentService,
                         FrontendSessionStorageFactoryContract $sessionStorage,
-                        Twig $twig,
-                        EventProceduresService $eventProceduresService
+                        Twig $twig
                         )
     {
         $this->registerPaymentMethods($payContainer);
