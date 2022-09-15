@@ -27,7 +27,7 @@ use Plenty\Modules\Payment\Method\Contracts\PaymentMethodContainer;
 use Novalnet\Helper\PaymentHelper;
 use Novalnet\Services\PaymentService;
 use Plenty\Modules\Wizard\Contracts\WizardContainerContract;
-use Novalnet\Assistants\NovalnetAssistant;
+
 use Novalnet\Methods\NovalnetPaymentAbstract;
 use Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract;
 use Novalnet\Constants\NovalnetConstants;
@@ -81,9 +81,9 @@ class NovalnetServiceProvider extends ServiceProvider
 
         $this->registerPaymentExecute($eventDispatcher, $paymentHelper, $paymentService, $sessionStorage);
         
-        $this->registerEvents($eventProceduresService);
         
-        pluginApp(WizardContainerContract::class)->register('payment-novalnet-assistant', NovalnetAssistant::class);
+        
+        
     }
      
     /**
@@ -215,47 +215,5 @@ class NovalnetServiceProvider extends ServiceProvider
             });
     }
     
-    /**
-     * Register the Novalnet events
-     *
-     * @param EventProceduresService $eventProceduresService
-     */
-    protected function registerEvents(EventProceduresService $eventProceduresService)
-    {
-        // Event for Onhold - Capture Process
-        $captureProcedureTitle = [
-            'de' => 'Novalnet | Bestätigen',
-            'en' => 'Novalnet | Confirm',
-        ];
-        $eventProceduresService->registerProcedure(
-            'Novalnet',
-            ProcedureEntry::EVENT_TYPE_ORDER,
-            $captureProcedureTitle,
-            '\Novalnet\Procedures\CaptureEventProcedure@run'
-        );
-        
-        // Event for Onhold - Void Process
-        $voidProcedureTitle = [
-            'de' => 'Novalnet | Stornieren',
-            'en' => 'Novalnet | Cancel',
-        ];
-        $eventProceduresService->registerProcedure(
-            'Novalnet',
-            ProcedureEntry::EVENT_TYPE_ORDER,
-            $voidProcedureTitle,
-            '\Novalnet\Procedures\VoidEventProcedure@run'
-        );
-        
-        // Event for Onhold - Refund Process
-        $refundProcedureTitle = [
-            'de' =>  'Novalnet | Rückerstattung',
-            'en' =>  'Novalnet | Refund',
-        ];
-        $eventProceduresService->registerProcedure(
-            'Novalnet',
-            ProcedureEntry::EVENT_TYPE_ORDER,
-            $refundProcedureTitle,
-            '\Novalnet\Procedures\RefundEventProcedure@run'
-        );
-    }
+    
 }
