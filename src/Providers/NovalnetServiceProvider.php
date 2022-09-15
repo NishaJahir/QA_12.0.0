@@ -70,6 +70,10 @@ class NovalnetServiceProvider extends ServiceProvider
                         )
     {
         $this->registerPaymentMethods($payContainer);
+        
+        $this->registerPaymentRendering($eventDispatcher, $basketRepository, $paymentHelper, $paymentService, $sessionStorage, $twig);
+
+        $this->registerPaymentExecute($eventDispatcher, $paymentHelper, $paymentService, $sessionStorage);
     }
      
     /**
@@ -87,5 +91,117 @@ class NovalnetServiceProvider extends ServiceProvider
                 AfterBasketCreate::class
             ]);
         }
+    }
+    
+    /**
+     * Rendering the Novalnet payment method content
+     *
+     * @param Dispatcher $eventDispatcher
+     * @param BasketRepositoryContract $basketRepository
+     * @param PaymentHelper $paymentHelper
+     * @param PaymentService $paymentService
+     * @param FrontendSessionStorageFactoryContract $sessionStorage
+     * @param Twig $twig
+     */
+    protected function registerPaymentRendering(Dispatcher $eventDispatcher,
+                                              BasketRepositoryContract $basketRepository,
+                                              PaymentHelper $paymentHelper,
+                                              PaymentService $paymentService,
+                                              FrontendSessionStorageFactoryContract $sessionStorage,
+                          Twig $twig
+                                              )
+    {
+        // Listen for the event that gets the payment method content
+        $eventDispatcher->listen(
+            GetPaymentMethodContent::class, 
+            function(GetPaymentMethodContent $event) use($basketRepository, $paymentHelper, $paymentService, $sessionStorage, $twig) {
+                
+            if($paymentHelper->getPaymentKeyByMop($event->getMop())) {
+                $paymentKey = $paymentHelper->getPaymentKeyByMop($event->getMop());
+                $paymentRequestData = $paymentService->generatePaymentParams($basketRepository->load(), $paymentKey);
+                if(empty($paymentRequestData['paymentRequestData']['customer']['first_name']) && empty($paymentRequestData['paymentRequestData']['customer']['last_name'])) {
+                    $content = $paymentHelper->getTranslatedText('nn_first_last_name_error');
+                    $contentType = 'errorCode';   
+                } else {
+                    // Check if the birthday field needs to show for guaranteed payments
+                    $showBirthday = ((!isset($paymentRequestData['paymentRequestData']['customer']['billing']['company']) && !isset($paymentRequestData['paymentRequestData']['customer']['birth_date'])) ||  (isset($paymentRequestData['paymentRequestData']['customer']['birth_date']) && time() < strtotime('+18 years', strtotime($paymentRequestData['paymentRequestData']['customer']['birth_date'])))) ? true : false;
+                    // Handle the Direct, Redirect and Form payments content type
+                    if(in_array($paymentKey, ['NOVALNET_INVOICE', 'NOVALNET_PREPAYMENT', 'NOVALNET_CASHPAYMENT', 'NOVALNET_MULTIBANCO']) || $paymentService->isRedirectPayment($paymentKey)  || ($paymentKey == 'NOVALNET_GUARANTEED_INVOICE' && $showBirthday == false)) {
+                        $content = '';
+                        $contentType = 'continue';
+                    } elseif(in_array($paymentKey, ['NOVALNET_SEPA', 'NOVALNET_GUARANTEED_SEPA'])) {
+                        $content = $twig->render('Novalnet::PaymentForm.NovalnetSepa', [
+                                            'nnPaymentProcessUrl' => $paymentService->getProcessPaymentUrl(),
+                                            'paymentMopKey' =>  $paymentKey,
+                                            'paymentName' => $paymentHelper->getCustomizedTranslatedText('template_' . strtolower($paymentKey)),
+                                            'showBirthday' => $showBirthday
+                                            ]);
+                        $contentType = 'htmlContent';
+                    } elseif($paymentKey == 'NOVALNET_GUARANTEED_INVOICE' && $showBirthday == true) {
+                        $content = $twig->render('Novalnet::PaymentForm.NovalnetGuaranteedInvoice', [
+                                                'nnPaymentProcessUrl' => $paymentService->getProcessPaymentUrl(),
+                                                'paymentMopKey' =>  $paymentKey,
+                                                'paymentName' => $paymentHelper->getCustomizedTranslatedText('template_' . strtolower($paymentKey)),
+                                                ]);
+                        $contentType = 'htmlContent';
+                    } elseif($paymentKey == 'NOVALNET_CC') {
+                        $content = $twig->render('Novalnet::PaymentForm.NovalnetCc', [
+                                                'nnPaymentProcessUrl' => $paymentService->getProcessPaymentUrl(),
+                                                'paymentMopKey' =>  $paymentKey,
+                                                'paymentName' => $paymentHelper->getCustomizedTranslatedText('template_' . strtolower($paymentKey)),
+                                                'ccFormDetails' => $paymentService->getCreditCardAuthenticationCallData($basketRepository->load(), strtolower($paymentKey)),
+                                                'ccCustomFields' => $paymentService->getCcFormFields() ?? ''
+                                                ]);
+                        $contentType = 'htmlContent';
+                    }
+                }
+                $sessionStorage->getPlugin()->setValue('nnPaymentData', $paymentRequestData);
+                $event->setValue($content);
+                $event->setType($contentType);
+            }            
+        });
+    }
+    
+     /**
+     * Execute the Novalnet payment method
+     *
+     * @param Dispatcher $eventDispatcher
+     * @param PaymentHelper $paymentHelper
+     * @param PaymentService $paymentService
+     * @param FrontendSessionStorageFactoryContract $sessionStorage
+     */
+    protected function registerPaymentExecute(Dispatcher $eventDispatcher,
+                                              PaymentHelper $paymentHelper,
+                                              PaymentService $paymentService,
+                                              FrontendSessionStorageFactoryContract $sessionStorage
+                                             )
+    {
+        // Listen for the event that executes the payment
+        $eventDispatcher->listen(
+            ExecutePayment::class,
+            function (ExecutePayment $event) use ($paymentHelper, $paymentService, $sessionStorage)
+            {
+                if($paymentHelper->getPaymentKeyByMop($event->getMop())) {
+                    $sessionStorage->getPlugin()->setValue('nnOrderNo',$event->getOrderId());
+                    $sessionStorage->getPlugin()->setValue('mop',$event->getMop());
+                    $paymentKey = $paymentHelper->getPaymentKeyByMop($event->getMop());
+                    $sessionStorage->getPlugin()->setValue('paymentkey', $paymentKey);
+                    $paymentResponseData = $paymentService->performServerCall();
+                    $nnDoRedirect = $sessionStorage->getPlugin()->getValue('nnDoRedirect');
+                    if($paymentService->isRedirectPayment($paymentKey) || !empty($nnDoRedirect)) {
+                        if(!empty($paymentResponseData) && !empty($paymentResponseData['result']['redirect_url']) && !empty($paymentResponseData['transaction']['txn_secret'])) {
+                            // Transaction secret used for the later checksum verification
+                            $sessionStorage->getPlugin()->setValue('nnTxnSecret', $paymentResponseData['transaction']['txn_secret']);
+                            $sessionStorage->getPlugin()->setValue('nnDoRedirect', null);
+                            $event->setType('redirectUrl');
+                            $event->setValue($paymentResponseData['result']['redirect_url']);
+                        } else {
+                           // Handle an error case and set the return type and value for the event.
+                              $event->setType('error');
+                              $event->setValue('The payment could not be executed!');
+                        }
+                    }
+                }
+            });
     }
 }
