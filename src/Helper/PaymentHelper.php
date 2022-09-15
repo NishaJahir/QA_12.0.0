@@ -50,8 +50,6 @@ use Plenty\Modules\Payment\Models\PaymentProperty;
 use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Payment\Contracts\PaymentOrderRelationRepositoryContract;
-use Novalnet\Services\PaymentService;
-use Novalnet\Services\TransactionService;
 use Plenty\Plugin\Log\Loggable;
 
 /**
@@ -97,11 +95,7 @@ class PaymentHelper
      */
     private $paymentOrderRelationRepository;
      
-    /**
-     *
-     * @var PaymentService
-     */
-    private $paymentService;
+    
     
     /**
      * @var TransactionService
@@ -117,7 +111,7 @@ class PaymentHelper
      * @param PaymentRepositoryContract $paymentRepository
      * @param OrderRepositoryContract $orderRepository
      * @param PaymentOrderRelationRepositoryContract $paymentOrderRelationRepository
-     * @param PaymentService $paymentService
+   
      * @param TransactionService $transactionService
      */
     public function __construct(PaymentMethodRepositoryContract $paymentMethodRepository,
@@ -126,8 +120,8 @@ class PaymentHelper
                                 PaymentRepositoryContract $paymentRepository,
                                 OrderRepositoryContract $orderRepository,
                                 PaymentOrderRelationRepositoryContract $paymentOrderRelationRepository,
-                                PaymentService $paymentService,
-                                TransactionService $transactionService
+                              
+                                
                                )
     {
         $this->paymentMethodRepository = $paymentMethodRepository;
@@ -136,8 +130,7 @@ class PaymentHelper
         $this->paymentRepository       = $paymentRepository;
         $this->orderRepository         = $orderRepository;
         $this->paymentOrderRelationRepository = $paymentOrderRelationRepository;
-        $this->paymentService  = $paymentService;
-        $this->transactionService = $transactionService;
+       
     }
     
     /**
@@ -578,82 +571,7 @@ class PaymentHelper
         return $paymentMethodKey[$paymentType];
     }
     
-    /**
-    * Get required details from payment object and Novalnet database
-    *
-    * @param int $orderId
-    *
-    * @return array
-    */
-    public function getDetailsFromPaymentProperty($orderId)
-    {
-        // Get the payment details
-        $paymentDetails = $this->paymentRepository->getPaymentsByOrderId($orderId);
-        
-        // Fetch the necessary data
-        foreach($paymentDetails as $paymentDetail)
-        {
-            $paymentProperties = $paymentDetail->properties;
-            foreach($paymentProperties as $paymentProperty)
-            {
-                  if ($paymentProperty->typeId == 1) {
-                    $tid = $paymentProperty->value;
-                  }
-                  if ($paymentProperty->typeId == 30) {
-                    $txStatus = $paymentProperty->value;
-                  }
-                  if ($paymentProperty->typeId == 21) {
-                     $invoiceDetails = $paymentProperty->value;
-                  }
-            }
-        }
-        
-        // Get Novalnet transaction details from the Novalnet database table
-        $nnDbTxDetails = $this->paymentService->getDatabaseValues($orderId);
-        
-        // Merge the array if bank details are there
-        if(!empty($invoiceDetails)) {
-            $nnDbTxDetails = array_merge($nnDbTxDetails, json_decode($invoiceDetails, true));
-        }
-        
-        // Get the transaction status as string for the previous payment plugin version
-        $nnDbTxDetails['tx_status'] = $this->paymentService->getTxStatusAsString($txStatus, $nnDbTxDetails['payment_id']);
-        
-        return $nnDbTxDetails;
-    }
     
-    /**
-     * Get refund status
-     * 
-     * @param int $orderId
-     * @param int $orderAmount
-     * 
-     * @return string
-     */
-    public function getRefundStatus($orderId, $orderAmount)
-    {
-        // Get the transaction details for an order
-        $transactionDetails = $this->transactionService->getTransactionData('orderNo', $orderId);
-        
-        $totalCallbackDebitAmount = 0;
-
-        foreach($transactionDetails as $transactionDetail) {
-            if($transactionDetail->referenceTid != $transactionDetail->tid) {
-                if(!empty($transactionDetail->additionalInfo)) {
-                    $additionalInfo = json_decode($transactionDetail->additionalInfo, true);
-                    if($additionalInfo['type'] == 'debit') {
-                        $totalCallbackDebitAmount += $transactionDetail->callbackAmount;  
-                    }
-                } else {
-                    $totalCallbackDebitAmount += $transactionDetail->callbackAmount;
-                }
-            }
-        }
-        
-        $refundStatus = ($orderAmount > $totalCallbackDebitAmount) ? 'Partial' : 'Full';
-        
-        return $refundStatus;
-    }
     
     /**
       * Creating Payment for credit note order
