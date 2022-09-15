@@ -17,7 +17,6 @@ namespace Novalnet\Procedures;
 
 use Plenty\Modules\EventProcedures\Events\EventProceduresTriggered;
 use Plenty\Modules\Order\Models\Order;
-use Novalnet\Helper\PaymentHelper;
 use Novalnet\Services\PaymentService;
 use Novalnet\Constants\NovalnetConstants;
 
@@ -27,11 +26,6 @@ use Novalnet\Constants\NovalnetConstants;
 class CaptureEventProcedure
 {
     /**
-     * @var PaymentHelper
-     */
-    private $paymentHelper;
-    
-    /**
      *
      * @var PaymentService
      */
@@ -40,13 +34,11 @@ class CaptureEventProcedure
     /**
      * Constructor.
      *
-     * @param PaymentHelper $paymentHelper
      * @param PaymentService $paymentService
      */
      
-    public function __construct(PaymentHelper $paymentHelper, PaymentService $paymentService)
+    public function __construct(PaymentService $paymentService)
     {
-        $this->paymentHelper = $paymentHelper;
         $this->paymentService = $paymentService; 
     }   
     
@@ -58,9 +50,9 @@ class CaptureEventProcedure
     {
         /* @var $order Order */
         $order = $eventTriggered->getOrder(); 
-        $transactionDetails = [];
+        
         // Get necessary information for the capture process
-        //$transactionDetails = $this->paymentHelper->getDetailsFromPaymentProperty($order->id);
+        $transactionDetails = $this->paymentService->getDetailsFromPaymentProperty($order->id);
         
         // Call the Capture process for the On-Hold payments
         if($transactionDetails['tx_status'] == 'ON_HOLD') {
