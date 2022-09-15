@@ -112,9 +112,9 @@ class RefundEventProcedure
             } else {
                  $refundAmount = (float) $order->amounts[0]->invoiceTotal; // Get the refunding amount
             }
-
+            $transactionDetails = [];
             // Get necessary information for the refund process
-            $transactionDetails = $this->paymentHelper->getDetailsFromPaymentProperty($parentOrderId);
+            //$transactionDetails = $this->paymentHelper->getDetailsFromPaymentProperty($parentOrderId);
 
             if(in_array($transactionDetails['tx_status'], ['PENDING', 'CONFIRMED'])) {
                 // Novalnet access key
