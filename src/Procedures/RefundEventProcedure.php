@@ -112,9 +112,9 @@ class RefundEventProcedure
             } else {
                  $refundAmount = (float) $order->amounts[0]->invoiceTotal; // Get the refunding amount
             }
-            $transactionDetails = [];
+            
             // Get necessary information for the refund process
-            //$transactionDetails = $this->paymentHelper->getDetailsFromPaymentProperty($parentOrderId);
+            $transactionDetails = $this->paymentService->getDetailsFromPaymentProperty($parentOrderId);
 
             if(in_array($transactionDetails['tx_status'], ['PENDING', 'CONFIRMED'])) {
                 // Novalnet access key
@@ -143,8 +143,8 @@ class RefundEventProcedure
                     $this->paymentService->insertPaymentResponseIntoNnDb($paymentResponseData);
         
                     // Get refund status it is happened for Full amount or Partially
-                    //$refundStatus = $this->paymentHelper->getRefundStatus($paymentResponseData['transaction']['order_no'], $paymentResponseData['transaction']['amount']);
-                    $refundStatus = 'FULL';
+                    $refundStatus = $this->paymentService->getRefundStatus($paymentResponseData['transaction']['order_no'], $paymentResponseData['transaction']['amount']);
+                    
                     // Set the refund status it Partial or Full refund
                     $paymentResponseData['refund'] = $refundStatus;
                     
