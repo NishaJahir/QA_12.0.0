@@ -246,7 +246,7 @@ class NovalnetAssistant extends WizardProvider
           $paymentMethodKey[0] = strtolower($paymentMethodKey[0]);
           
           $config['steps'][$paymentMethodKey] = [
-                "title" => 'NovalnetAssistant.'. $paymentMethodKey,
+                "title" => 'Customize.'. $paymentMethodKey,
                 "sections" => [
                     [
                         "title" => 'Customize.' .$paymentMethodKey,
