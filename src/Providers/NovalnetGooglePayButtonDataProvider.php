@@ -58,6 +58,7 @@ class NovalnetGooglePayButtonDataProvider
         }
         // Get the Payment MOP Id
         $paymentMethodDetails = $paymentHelper->getPaymentMethodByKey('NOVALNET_GOOGLEPAY');
+        $paymentHelper->logger('MOP details', $paymentMethodDetails);
         // Get the order language
         $orderLang = strtoupper($sessionStorage->getLocaleSettings()->language);
         // Get the client Key
