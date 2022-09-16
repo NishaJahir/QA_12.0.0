@@ -56,12 +56,14 @@ class NovalnetGooglePayButtonDataProvider
             // Get the order total basket amount
             $orderAmount = $paymentHelper->ConvertAmountToSmallerUnit($basket->basketAmount);
         }
+        // Get the Payment MOP Id
+        $paymentMethodDetails = $paymentHelper->getPaymentMethodByKey('NOVALNET_GOOGLEPAY');
         // Get the order language
         $orderLang = strtoupper($sessionStorage->getLocaleSettings()->language);
         // Get the client Key
         $clientkey = trim($settingsService->getNnPaymentSettingsValue('novalnet_client_key'));
         
         // Render the Google Pay button
-       return $twig->render('Novalnet::PaymentForm.NovalnetGooglePayButton', ['clientKey' => $clientkey, 'countryCode' => 'DE', 'orderTotalAmount' => $orderAmount, 'orderLang' => $orderLang, 'orderCurrency' => $basket->currency, 'nnPaymentProcessUrl' => $paymentService->getProcessPaymentUrl()]);
+       return $twig->render('Novalnet::PaymentForm.NovalnetGooglePayButton', ['mopId' => $paymentMethodDetails->id, 'clientKey' => $clientkey, 'countryCode' => 'DE', 'orderTotalAmount' => $orderAmount, 'orderLang' => $orderLang, 'orderCurrency' => $basket->currency, 'nnPaymentProcessUrl' => $paymentService->getProcessPaymentUrl()]);
     }
 }
