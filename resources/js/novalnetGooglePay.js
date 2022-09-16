@@ -53,10 +53,20 @@ jQuery(document).ready(function() {
         googlepayNovalnetPaymentObj.setPaymentIntent(requestData);
         // Checking for the Payment Method availability
         googlepayNovalnetPaymentObj.isPaymentMethodAvailable(function(displayGooglePayButton) {
-            if (displayGooglePayButton) {
-                // Initiating the Payment Request for the Wallet Payment
-                googlepayNovalnetPaymentObj.addPaymentButton("#nn_google_pay");
-            }
+            var mopId = jQuery('#nn_google_pay_mop').val();
+            if(displayGooglePayButton) {
+				// Display the Google Pay payment
+				jQuery('li[data-id="'+mopId+'"]').show();
+				jQuery('li[data-id="'+mopId+'"]').click(function() {
+					// Initiating the Payment Request for the Wallet Payment
+					googlepayNovalnetPaymentObj.addPaymentButton("#nn_google_pay");
+					// Hide the shop place-order button
+					jQuery('.widget-place-order').hide();
+				});
+            } else {
+				// Hide the Google Pay payment if it is not possible
+				jQuery('li[data-id="'+mopId+'"]').show();
+			}
         });
     } catch (e) {
         // Handling the errors from the payment intent setup
