@@ -13,7 +13,7 @@
 #}
  
 {# Load the css #}
-<link rel="stylesheet" href="{{plugin_path('Novalnet')}}/css/novalnet_ui.css">
+<link rel="stylesheet" href="{{plugin_path('Novalnet')}}/css/novalnetUi.css">
 
 {# Initialize the payment Id and payment status #}
 {% set paymentId = 0 %}
@@ -42,9 +42,9 @@
 {% if 'novalnet' in paymentKey %}
 	{% if services.template.isCurrentTemplate('tpl.confirmation') %}
 		<div id="nnReinitPaymentMethod-{{order.id}}" class="row con-reinit" style="display:{{display}};">
-			<strong class="col-xs-6 col-sm-5"></strong>
-			<span class="col-xs-6 col-sm-7">
-				<a class="payment-confirmation-btn">
+			<strong class="col-6 col-sm-5"></strong>
+			<span class="col-6 col-sm-7">
+				<a class="payment-confirmation-btn btn ">
 					<span>{{trans("Novalnet::Customize.template_novalnet_reinit_payment")}}</span>
 				</a>
 			</span>
