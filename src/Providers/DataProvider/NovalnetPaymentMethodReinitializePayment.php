@@ -17,7 +17,8 @@ namespace Novalnet\Providers\DataProvider;
 
 use Plenty\Plugin\Templates\Twig;
 use Novalnet\Services\PaymentService;
-
+use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
+use Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract;
 
 class NovalnetPaymentMethodReinitializePayment
 {
@@ -25,6 +26,8 @@ class NovalnetPaymentMethodReinitializePayment
     {
         $order = $arg[0];
         $paymentService = pluginApp(PaymentService::class);
+        $basketRepository = pluginApp(BasketRepositoryContract::class);
+        $sessionStorage = pluginApp(FrontendSessionStorageFactoryContract::class);
         
         // Get the Novalnet payment method Id
         foreach($order['properties'] as $orderProperty) {
@@ -36,6 +39,20 @@ class NovalnetPaymentMethodReinitializePayment
         
         // Get the Novalnet payment key and MOP Id
         $transactionDetails = $paymentService->getDetailsFromPaymentProperty($order['id']);
+        
+        // Build the payment request parameters
+        if(!empty($basketRepository->load())) {
+            // Assign the billing and shipping Id
+            $basketRepository->load()->customerInvoiceAddressId = !empty($basketRepository->load()->customerInvoiceAddressId) ?? $order['billingAddress']['id'];
+            $basketRepository->load()->customerShippingAddressId = !empty($basketRepository->load()->customerShippingAddressId) ?? $order['deliveryAddress']['id'];
+            // Payment request parameters
+            $paymentRequestData = $paymentService->generatePaymentParams($basketRepository->load(), strtoupper($transactionDetails['paymentName']));
+            
+            // Assign the requested paramters into session
+            $sessionStorage->getPlugin()->setValue('nnPaymentData', $paymentRequestData);
+            $sessionStorage->getPlugin()->setValue('nnOrderNo', $order['id']);
+            
+        }
 
         // If the Novalnet payments are rejected do the reinitialize payment
         if(strpos($transactionDetails['paymentName'], 'novalnet') !== false &&  ((!empty($transactionDetails['tx_status']) && !in_array($transactionDetails['tx_status'], ['PENDING', 'ON_HOLD', 'CONFIRMED', 'DEACTIVATED'])) || empty($transactionDetails['tx_status']))) {
