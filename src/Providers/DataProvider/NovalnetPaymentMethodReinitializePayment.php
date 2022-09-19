@@ -29,6 +29,8 @@ class NovalnetPaymentMethodReinitializePayment
         $paymentService = pluginApp(PaymentService::class);
         $basketRepository = pluginApp(BasketRepositoryContract::class);
         $sessionStorage = pluginApp(FrontendSessionStorageFactoryContract::class);
+        // Load the basket object
+        $basket = $basketRepository->load();
         
         // Get the Novalnet payment method Id
         foreach($order['properties'] as $orderProperty) {
@@ -42,12 +44,12 @@ class NovalnetPaymentMethodReinitializePayment
         $transactionDetails = $paymentService->getDetailsFromPaymentProperty($order['id']);
         
         // Build the payment request parameters
-        if(!empty($basketRepository->load())) {
+        if(!empty($basket)) {
             // Assign the billing and shipping Id
-            $basketRepository->load()->customerInvoiceAddressId = !empty($basketRepository->load()->customerInvoiceAddressId) ?? $order['billingAddress']['id'];
-            $basketRepository->load()->customerShippingAddressId = !empty($basketRepository->load()->customerShippingAddressId) ?? $order['deliveryAddress']['id'];
+            $basket->customerInvoiceAddressId = !empty($basket->customerInvoiceAddressId) ? $basket->customerInvoiceAddressId: $order['billingAddress']['id'];
+            $basket->customerShippingAddressId = !empty($basket->customerShippingAddressId) ? $basket->customerShippingAddressId : $order['deliveryAddress']['id'];
             // Payment request parameters
-            $paymentRequestData = $paymentService->generatePaymentParams($basketRepository->load(), strtoupper($transactionDetails['paymentName']));
+            $paymentRequestData = $paymentService->generatePaymentParams($basket, strtoupper($transactionDetails['paymentName']));
             
             // Assign the requested paramters into session
             $sessionStorage->getPlugin()->setValue('nnPaymentData', $paymentRequestData);
