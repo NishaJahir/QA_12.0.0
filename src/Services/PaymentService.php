@@ -1078,7 +1078,7 @@ class PaymentService
     {
         // Get the payment details
         $paymentDetails = $this->paymentRepository->getPaymentsByOrderId($orderId);
-        
+        $this->getLogger(__METHOD__)->error('payment details services', $paymentDetails);
         // Fetch the necessary data
         foreach($paymentDetails as $paymentDetail)
         {
