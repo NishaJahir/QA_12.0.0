@@ -89,10 +89,12 @@ class NovalnetOrderConfirmationDataProvider
                     
                     // Form the Novalnet transaction comments
                     $transactionComments = $paymentService->formTransactionComments($nnDbTxDetails);
+                    
+                    $transactionComment .= (string) $transactionComments;
+                    $transactionComment .= PHP_EOL;
                 }
             }
-            $transactionComment .= (string) $transactionComments;
-            $transactionComment .= PHP_EOL;
+            
         }
         
         // Replace PHP_EOL as break tag for the alignment
