@@ -24,6 +24,7 @@ use Novalnet\Services\SettingsService;
 use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Plugin\Application;
 use Plenty\Plugin\Translation\Translator;
+use Plenty\Plugin\Log\Loggable;
 
 /**
  * Class NovalnetPaymentAbstract
@@ -32,6 +33,8 @@ use Plenty\Plugin\Translation\Translator;
  */
 abstract class NovalnetPaymentAbstract extends PaymentMethodBaseService
 {
+    use Loggable;
+    
     const PAYMENT_KEY = 'Novalnet';
     
     /** 
@@ -209,6 +212,7 @@ abstract class NovalnetPaymentAbstract extends PaymentMethodBaseService
     {
         if($orderId > 0) {
             $transactionDetails = $this->paymentService->getDetailsFromPaymentProperty($orderId);
+            $this->getLogger(__METHOD__)->error('methods array', $transactionDetails);
             if( strpos($this::PAYMENT_KEY, 'NOVALNET') !== false &&  ( (!empty($transactionDetails['tx_status']) && !in_array($transactionDetails['tx_status'], ['PENDING', 'ON_HOLD', 'CONFIRMED', 'DEACTIVATED'])) || empty($transactionDetails['tx_status']) )) {
                 return true;
             }
