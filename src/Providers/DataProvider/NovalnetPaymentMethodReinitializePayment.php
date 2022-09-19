@@ -29,8 +29,7 @@ class NovalnetPaymentMethodReinitializePayment
         $paymentService = pluginApp(PaymentService::class);
         $basketRepository = pluginApp(BasketRepositoryContract::class);
         $sessionStorage = pluginApp(FrontendSessionStorageFactoryContract::class);
-        // Load the basket object
-        $basket = $basketRepository->load();
+        
         
         // Get the Novalnet payment method Id
         foreach($order['properties'] as $orderProperty) {
