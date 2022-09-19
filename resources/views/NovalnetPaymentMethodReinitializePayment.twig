@@ -39,7 +39,7 @@
 {% endif %}
 
 {# Check if it is Novalnet Payments then dispay the Reinit payment button in the order confirmation page #}
-{% if 'NOVALNET' in paymentKey %}
+{% if 'novalnet' in paymentKey %}
 	{% if services.template.isCurrentTemplate('tpl.confirmation') %}
 		<div id="nnReinitPaymentMethod-{{order.id}}" class="row con-reinit" style="display:{{display}};">
 			<strong class="col-xs-6 col-sm-5"></strong>
