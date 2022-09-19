@@ -19,6 +19,7 @@ use Plenty\Plugin\Templates\Twig;
 use Novalnet\Services\PaymentService;
 use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
 use Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract;
+use Novalnet\Helper\PaymentHelper;
 
 class NovalnetPaymentMethodReinitializePayment
 {
@@ -28,6 +29,7 @@ class NovalnetPaymentMethodReinitializePayment
         $paymentService = pluginApp(PaymentService::class);
         $basketRepository = pluginApp(BasketRepositoryContract::class);
         $sessionStorage = pluginApp(FrontendSessionStorageFactoryContract::class);
+        $paymentHelper = pluginApp(PaymentHelper::class);
         
         // Get the Novalnet payment method Id
         foreach($order['properties'] as $orderProperty) {
@@ -42,6 +44,7 @@ class NovalnetPaymentMethodReinitializePayment
         
         // Build the payment request parameters
         if(!empty($basketRepository->load())) {
+            $paymentHelper->logger('basket', $basketRepository->load());
             // Assign the billing and shipping Id
             $basketRepository->load()->customerInvoiceAddressId = !empty($basketRepository->load()->customerInvoiceAddressId) ?? $order['billingAddress']['id'];
             $basketRepository->load()->customerShippingAddressId = !empty($basketRepository->load()->customerShippingAddressId) ?? $order['deliveryAddress']['id'];
