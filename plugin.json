@@ -54,6 +54,11 @@
           "key"         : "Novalnet\\Providers\\DataProvider\\NovalnetPaymentMethodReinitializePaymentScript",
           "name"        : "Novalnet Initiate Payment Script",
           "description" : "A script for hide the Apple Pay in not supporting browsers"
+        },
+        {
+          "key"         : "Novalnet\\Providers\\DataProvider\\NovalnetPaymentMethodReinitializePayment",
+          "name"        : "Novalnet Initiate Payment",
+          "description" : "Display the pay now Button"
         }
     ]
 }
