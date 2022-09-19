@@ -182,4 +182,13 @@ class PaymentController extends Controller
         // Call the shop executePayment function
         return $this->response->redirectTo($this->sessionStorage->getLocaleSettings()->language . '/place-order');
     }
+    
+    /**
+     * Process the direct payment methods when the change payment method option used
+     *
+     */
+    public function directPaymentProcess()
+    {
+        $this->paymentService->performServerCall();
+    }
 }
