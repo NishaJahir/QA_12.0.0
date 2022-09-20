@@ -94,13 +94,7 @@ class PaymentHelper
      * @var PaymentOrderRelationRepositoryContract
      */
     private $paymentOrderRelationRepository;
-     
     
-    
-    /**
-     * @var TransactionService
-     */
-    private $transactionService;
     
     /**
      * Constructor.
@@ -120,8 +114,6 @@ class PaymentHelper
                                 PaymentRepositoryContract $paymentRepository,
                                 OrderRepositoryContract $orderRepository,
                                 PaymentOrderRelationRepositoryContract $paymentOrderRelationRepository
-                              
-                                
                                )
     {
         $this->paymentMethodRepository = $paymentMethodRepository;
@@ -130,7 +122,6 @@ class PaymentHelper
         $this->paymentRepository       = $paymentRepository;
         $this->orderRepository         = $orderRepository;
         $this->paymentOrderRelationRepository = $paymentOrderRelationRepository;
-       
     }
     
     /**
